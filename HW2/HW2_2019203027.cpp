@@ -1,11 +1,3 @@
-/*
-* 현재 괄호 없는 식은 정상 작동되는걸 확인.
-* 괄호 불균형 오류 메세지 정상 출력 확인.
-* divide by zero 오류 메세지 정상 출력 확인.
-* 
-* 괄호 있는 식 연산 부분에서 dequeue 오류 발생. 괄호 debug 요망.
-*/
-
 #include <iostream>
 #include <stack>
 #include <cctype>
@@ -16,7 +8,7 @@ using namespace std;
 void calculate(string expression);
 void evaluate(stack<double>& numbers, stack<char>& operations) throw (int);
 void evaluate(stack<double>& numbers, char op) throw (int);
-void makeDecimal(stack<double>& numbers, int count_integer, int count_fraction);
+void makeDecimal(stack<double>& numbers, int& count_integer, int& count_fraction);
 char oppositeParenthesis(char parenthesis);
 int operationValue(char op);
 
@@ -49,8 +41,8 @@ void calculate(string expression)
 
 	int count_integer = 0;  //  count fraction part
 	int count_fraction = -1;  //  count fraction part. default is -1 to describe non-decimal
-
-	bool unbalanced = false; //  balance of parenthesis
+	
+	bool isBalanced = true;  //  check parenthesis balance
 
 	for (int i = 0; i != expression.length(); ++i)
 	{
@@ -77,9 +69,6 @@ void calculate(string expression)
 			if (count_fraction != -1)
 			{
 				makeDecimal(numbers, count_integer, count_fraction);
-				
-				count_integer = 0;
-				count_fraction = -1;
 			}
 
 			if (operations.size() == 0 || strchr("({[", operations.top()) != NULL)
@@ -119,9 +108,6 @@ void calculate(string expression)
 			if (count_fraction != -1)
 			{
 				makeDecimal(numbers, count_integer, count_fraction);
-
-				count_integer = 0;
-				count_fraction = -1;
 			}
 
 			if (parenthesis.size() != 0 && oppositeParenthesis(parenthesis.top()) == expression[i])
@@ -130,6 +116,7 @@ void calculate(string expression)
 				{
 					parenthesis.pop();
 					evaluate(numbers, operations);
+					operations.pop();
 				}
 				catch (int err)
 				{
@@ -139,13 +126,13 @@ void calculate(string expression)
 			}
 			else
 			{
-				unbalanced = true;
+				isBalanced = false;
 				break;
 			}
 		}
 	}
 
-	if (parenthesis.size() != 0 || unbalanced)
+	if (parenthesis.size() != 0 || !isBalanced)
 	{
 		cout << "Error!: unbalanced parentheses" << endl;
 	}
@@ -228,12 +215,14 @@ char oppositeParenthesis(char parenthesis)
 		return ')';
 	case '{':
 		return '}';
-	case ']':
+	case '[':
 		return ']';
+	default:
+		return 'E';
 	}
 }
 
-void makeDecimal(stack<double>& numbers, int count_integer, int count_fraction)
+void makeDecimal(stack<double>& numbers, int& count_integer, int& count_fraction)
 {
 	double result = 0;
 	double powerOfTen = 1;
@@ -254,6 +243,9 @@ void makeDecimal(stack<double>& numbers, int count_integer, int count_fraction)
 
 		powerOfTen *= 10;
 	}
+
+	count_integer = 0;
+	count_fraction = -1;
 
 	numbers.push(result);
 }
