@@ -2,6 +2,8 @@
 #include <stack>
 #include <cctype>
 #include <cstring>
+#include <iomanip>
+#include <cmath>
 
 using namespace std;
 
@@ -11,6 +13,7 @@ void evaluate(stack<double>& numbers, char op) throw (int);
 void makeDecimal(stack<double>& numbers, int& count_integer, int& count_fraction);
 char oppositeParenthesis(char parenthesis);
 int operationValue(char op);
+bool isZero(double x);
 
 int main()
 {
@@ -43,6 +46,7 @@ void calculate(string expression)
 	int count_fraction = -1;  //  count fraction part. default is -1 to describe non-decimal
 	
 	bool isBalanced = true;  //  check parenthesis balance
+	bool divideByZero = false;
 
 	for (int i = 0; i != expression.length(); ++i)
 	{
@@ -88,8 +92,8 @@ void calculate(string expression)
 					}
 					catch (int err)
 					{
-						cout << "Error!: divide by zero" << endl;
-						return;
+						divideByZero = true;
+						break;
 					}
 				}
 				else //  expression's operation value is higher than stack
@@ -120,11 +124,11 @@ void calculate(string expression)
 				}
 				catch (int err)
 				{
-					cout << "Error!: divide by zero" << endl;
-					return;
+					divideByZero = true;
+					break;
 				}
 			}
-			else
+			else  //  parenthesis unbalance
 			{
 				isBalanced = false;
 				break;
@@ -135,6 +139,7 @@ void calculate(string expression)
 	if (parenthesis.size() != 0 || !isBalanced)
 	{
 		cout << "Error!: unbalanced parentheses" << endl;
+		return;
 	}
 	else
 	{
@@ -147,12 +152,20 @@ void calculate(string expression)
 
 			evaluate(numbers, operations);
 
-			cout << numbers.top() << endl;
+			streamsize perc = cout.precision();
+
+			cout << fixed << setprecision(3)
+				<< numbers.top() << setprecision(perc) << endl;
 		}
 		catch (int err)
 		{
-			cout << "Error!: divide by zero" << endl;
+			divideByZero = true;
 		}
+	}
+
+	if (divideByZero)
+	{
+		cout << "Error!: divide by zero" << endl;
 	}
 }
 
@@ -160,7 +173,7 @@ void evaluate(stack<double>& numbers, stack<char>& operations) throw (int)
 {
 	while (1)
 	{
-		if (operations.top() == '/' && numbers.top() == 0)
+		if (operations.top() == '/' && isZero(numbers.top()))
 		{
 			throw 0;
 		}
@@ -178,8 +191,8 @@ void evaluate(stack<double>& numbers, stack<char>& operations) throw (int)
 void evaluate(stack<double>& numbers, char op) throw (int)
 {
 	double operand1, operand2;
-	
-	if (op == '/' && numbers.top() == 0)
+
+	if (op == '/' && isZero(numbers.top()))
 	{
 		throw 0;
 	}
@@ -261,4 +274,11 @@ int operationValue(char op)
 	case '/':
 		return 2;
 	}
+}
+
+bool isZero(double x)
+{
+	double e = 1e-015;
+
+	return fabs(x - 0.0F) <= e;
 }
