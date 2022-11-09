@@ -218,7 +218,7 @@ char oppositeParenthesis(char parenthesis)
 	case '[':
 		return ']';
 	default:
-		return 'E';
+		return ' ';
 	}
 }
 
