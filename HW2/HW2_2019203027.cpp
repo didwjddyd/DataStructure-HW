@@ -1,3 +1,6 @@
+// Name: ¾çÁ¤¿ë
+// Student ID: 2019203027
+
 #include <iostream>
 #include <stack>
 #include <cctype>
@@ -9,11 +12,15 @@ using namespace std;
 
 void calculate(string expression);
 void evaluate(stack<double>& numbers, stack<char>& operations) throw (int);
-void evaluate(stack<double>& numbers, char op) throw (int);
+void evaluate(stack<double>& numbers, char op, bool isReverse = false) throw (int);
+void finalEvaluate(stack<double>& numbers, stack<char> operations) throw(int);
 void makeDecimal(stack<double>& numbers, int& count_integer, int& count_fraction);
 char oppositeParenthesis(char parenthesis);
 int operationValue(char op);
 bool isZero(double x);
+
+template <class Item>
+stack<Item> reverse(stack<Item> s);
 
 int main()
 {
@@ -150,7 +157,7 @@ void calculate(string expression)
 				makeDecimal(numbers, count_integer, count_fraction);
 			}
 
-			evaluate(numbers, operations);
+			finalEvaluate(numbers, operations);
 
 			streamsize perc = cout.precision();
 
@@ -188,7 +195,7 @@ void evaluate(stack<double>& numbers, stack<char>& operations) throw (int)
 	}
 }
 
-void evaluate(stack<double>& numbers, char op) throw (int)
+void evaluate(stack<double>& numbers, char op, bool isReverse) throw (int)
 {
 	double operand1, operand2;
 
@@ -197,11 +204,22 @@ void evaluate(stack<double>& numbers, char op) throw (int)
 		throw 0;
 	}
 
-	operand2 = numbers.top();
-	numbers.pop();
+	if (!isReverse)
+	{
+		operand2 = numbers.top();
+		numbers.pop();
 
-	operand1 = numbers.top();
-	numbers.pop();
+		operand1 = numbers.top();
+		numbers.pop();
+	}
+	else
+	{
+		operand1 = numbers.top();
+		numbers.pop();
+
+		operand2 = numbers.top();
+		numbers.pop();
+	}
 
 	switch (op)
 	{
@@ -218,6 +236,56 @@ void evaluate(stack<double>& numbers, char op) throw (int)
 		numbers.push(operand1 / operand2);
 		break;
 	}
+}
+
+void finalEvaluate(stack<double>& numbers, stack<char> operations) throw(int)
+{
+	stack <char> operations_R;
+	bool isReverse;
+
+	if (operations.size() > 1)
+	{
+		operations_R = reverse(operations);
+		numbers = reverse(numbers);
+
+		isReverse = true;
+	}
+	else
+	{
+		operations_R = operations;
+
+		isReverse = false;
+	}
+
+	while (1)
+	{
+		if (operations_R.top() == '/' && isZero(numbers.top()))
+		{
+			throw 0;
+		}
+
+		evaluate(numbers, operations_R.top(), isReverse);
+		operations_R.pop();
+
+		if (operations_R.size() == 0)
+		{
+			break;
+		}
+	}
+}
+
+template <class Item>
+stack<Item> reverse(stack<Item> s)
+{
+	stack<Item> result;
+
+	do
+	{
+		result.push(s.top());
+		s.pop();
+	} while (!s.empty());
+
+	return result;
 }
 
 char oppositeParenthesis(char parenthesis)
